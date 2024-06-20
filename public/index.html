@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Restaurant ChatBot</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f4f4f4;
+    }
+    .chat-container {
+      width: 400px;
+      max-width: 100%;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .chat-header, .chat-footer {
+      padding: 15px;
+      background-color: #007bff;
+      color: #fff;
+    }
+    .chat-body {
+      padding: 15px;
+      flex: 1;
+      overflow-y: auto;
+    }
+    .message {
+      margin-bottom: 10px;
+    }
+    .message.bot {
+      text-align: left;
+    }
+    .message.user {
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">
+      Restaurant ChatBot
+    </div>
+    <div class="chat-body" id="chatBody">
+      <!-- Messages will appear here -->
+    </div>
+    <div class="chat-footer">
+      <input type="text" id="messageInput" placeholder="Type a message..." style="width: 80%; padding: 10px;">
+      <button id="sendButton" style="padding: 10px;">Send</button>
+    </div>
+  </div>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    const chatBody = document.getElementById('chatBody');
+    const messageInput = document.getElementById('messageInput');
+    const sendButton = document.getElementById('sendButton');
+
+    const deviceId = 'device-' + Math.random().toString(36).substr(2, 9);
+
+    socket.on('response', (data) => {
+      const message = document.createElement('div');
+      message.classList.add('message', 'bot');
+      message.textContent = data.message;
+      chatBody.appendChild(message);
+      chatBody.scrollTop = chatBody.scrollHeight;
+    });
+
+    sendButton.addEventListener('click', () => {
+      const messageText = messageInput.value.trim();
+      if (messageText !== '') {
+        const message = document.createElement('div');
+        message.classList.add('message', 'user');
+        message.textContent = messageText;
+        chatBody.appendChild(message);
+        chatBody.scrollTop = chatBody.scrollHeight;
+
+        socket.emit('message', { deviceId, message: messageText });
+
+        messageInput.value = '';
+      }
+    });
+
+    messageInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        sendButton.click();
+      }
+    });
+  </script>
+</body>
+</html>
